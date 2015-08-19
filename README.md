@@ -1,27 +1,27 @@
 # PythonChat
-# Python3
+Python 3.x
 
 PythonChat is a barebones chat server/client with no username/password storage, or any kind of encryption.
 It is only dependent on the python standard library, so there should be no issues as long as you have Python 3.x.
 
-Modules:
-socket
-tkinter(chat_client_tcp.py)
-sys    (chat_client_tcp.py)
-_thread(chat_server_tcp.py)
+###Modules:
+*socket
+*tkinter(chat_client_tcp.py)
+*sys    (chat_client_tcp.py)
+*_thread(chat_server_tcp.py)
 
-Messaging:
+###Messaging:
 messages between the client and srever are formated as such:
 
   (message length)backtick(message)
   "12`Hello World!"
 
-chat_server_tcp.py:
+###chat_server_tcp.py:
 the server script will create a socket to accept incoming connection requests from clients. After the connection
 is accepted and the client socket has been created, each client will be run in it's own thread. Currently there is
 no way to specify a port outside of changing the value in the script. It's set to ("0.0.0.0"/"",64321)
 
-chat_client_tcp.py:
+###chat_client_tcp.py:
 the client will create socket and attempt to connect with the server address. If the attempt fails, the program will
 close. If successful the tkinter GUI will be created. 
 
