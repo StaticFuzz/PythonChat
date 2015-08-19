@@ -5,10 +5,10 @@ PythonChat is a barebones chat server/client with no username/password storage, 
 It is only dependent on the python standard library, so there should be no issues as long as you have Python 3.x.
 
 ###Modules:
-  *socket
-  *tkinter(chat_client_tcp.py)
-  *sys    (chat_client_tcp.py)
-  *_thread(chat_server_tcp.py)
+  socket
+  tkinter(chat_client_tcp.py)
+  sys    (chat_client_tcp.py)
+  _thread(chat_server_tcp.py)
 
 ###Messaging:
 messages between the client and srever are formated as such:
