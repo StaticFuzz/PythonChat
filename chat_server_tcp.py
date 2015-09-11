@@ -1,5 +1,6 @@
 import socket
 import _thread
+import json
 
 
 def main():
@@ -8,6 +9,10 @@ def main():
     connection requests. Each client socket will be run in it's own
     thread. Currently socket address is ("",64321).
     """
+    json_file = open("users", "r")
+    user_data = json.load(json_file)
+    json_file.close()
+
     host_address = ""
     host_port = 64321
     client_dict = {}
@@ -21,34 +26,81 @@ def main():
 
     while True:
         client_socket, address = server.accept()
-        client_dict[address] = client_socket
         print("{} connected".format(address))
-        _thread.start_new_thread(thread_client, (client_socket, address, client_dict))
+        _thread.start_new_thread(thread_client, (client_socket, address, client_dict, user_data))
 
 
-def thread_client(conn, addr, clients):
+def thread_client(conn, addr, clients, users):
     """
-    Main client loop. Accepts messages from client socket then
+    Checks and verifies password/username, and handles adding new
+    users to the database.
+
+    Main client loop Accepts messages from client socket then
     broadcasts message to all clients. If the connection is broken
     the loop will break, and the client will be deleted from client_dict.
     """
+    MESSAGE_OK = "{}`{}".format(len("OK"), "OK")
+    MESSAGE_UNAVAILABLE = "{}`{}".format(len("UNAVAILABLE"), "UNAVAILABLE")
+    MESSAGE_BAD = "{}`{}".format(len("BAD"), "BAD")
+    MESSAGE_USER_ACTIVE = "{}`{}".format(len("USER ACTIVE"), "USER ACTIVE")
+
     lock = _thread.allocate_lock()
-    while conn:
+    verified = False
+
+    while not verified:
+        try:
+            message = get_message(conn)
+            message_type, username, password = message.split("`", 2)
+        except ValueError:
+            print("bad connection at {}".format(addr))
+            break
+
+        if message_type == "SIGNUP":
+            if username in users:
+                conn.send(MESSAGE_UNAVAILABLE.encode())
+            else:
+                lock.acquire()
+                users[username] = password
+                clients[username] = [conn, addr]
+                json_file = open("users", "wt")
+                json_file.write(json.dumps(users))
+                json_file.close()
+                lock.release()
+                conn.send(MESSAGE_OK.encode())
+                verified = True
+        elif message_type == "LOGIN":
+            if username in users and users[username] == password:
+                if username not in clients:
+                    lock.acquire()
+                    clients[username] = [conn, addr]
+                    lock.release()
+                    conn.send(MESSAGE_OK.encode())
+                    verified = True
+                else:
+                    conn.send(MESSAGE_USER_ACTIVE.encode())
+            else:
+                conn.send(MESSAGE_BAD.encode())
+
+    while verified:
         try:
             message = get_message(conn)
         except socket.error:
             print("bad connection at {}".format(addr))
+            lock.acquire()
+            del clients[username]
+            lock.release()
+            conn.close()
             break
 
         if message:
             print("{}: {}".format(addr, message))
             server_broadcast(message, clients)
         else:
+            lock.acquire()
+            del clients[username]
+            lock.release()
+            conn.close()
             break
-
-    lock.acquire()
-    del clients[addr]
-    lock.release()
 
 
 def get_message(connection):
@@ -79,11 +131,11 @@ def server_broadcast(msg, clients):
     """
     out_msg = "{}`{}".format(len(msg), msg).encode()
 
-    for addr in clients:
-        client = clients[addr]
+    for user in clients:
+        client = clients[user][0]
         try:
             client.send(out_msg)
-        except socket.error or ConnectionResetError:
+        except ConnectionResetError:
             continue
 
 
