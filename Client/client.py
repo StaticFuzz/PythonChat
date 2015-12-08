@@ -9,6 +9,11 @@ from Client.gui_login import LoginScreen
 from Client.gui_chat import ChatScreen
 
 
+def main():
+    chat = App()
+    chat.mainloop()
+
+
 def destroy_all(connection, application):
     application.destroy()
     connection.close()
@@ -147,5 +152,4 @@ class App(tkinter.Tk):
 
 
 if __name__ == "__main__":
-    chat = App()
-    chat.mainloop()
+   main()

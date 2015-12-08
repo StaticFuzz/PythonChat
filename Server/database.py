@@ -1,7 +1,17 @@
 def main():
     print("""
-    A set of predefined operations to create and interact with a sqlite3
-    database for storing usernames and passwords.
+    A set of predefined operations to create and interact with a sqlite3 database for storing user names and passwords.
+
+    available operations:
+
+            make_database(connection)
+            new_user(connection, username, password)
+            remove_user(connection, username, password)
+            username_check(connection, username, password)
+
+    The connection parameter is a connection returned by sqlite3.connect(path/to/file)
+
+    user names and passwords are stored in the table 'user_info'
     """)
 
 def make_database(connection):
